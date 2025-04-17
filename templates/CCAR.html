@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CCAR Calculator</title>
+    <style>
+        body {
+    font-family: Arial, sans-serif;
+    margin: 20px auto;
+    max-width: 480px;
+    background-color: white;
+}
+
+h1 {
+    text-align: center;
+    color: #ff9900;
+}
+
+.calculator {
+    border: 2px solid #ff9900;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 2px 2px 8px #ccc;
+}
+
+label {
+    display: block;
+    margin-top: 10px;
+}
+
+input, button {
+    width: 100%;
+    max-width: 430px;
+    padding: 10px;
+    margin-top: 5px;
+    font-size: 16px;
+    box-sizing: border-box; /* 确保宽度不受内边距的影响 */
+}
+
+button {
+    background-color: #ff9900;
+    color: white;
+    border: none;
+    cursor: pointer;
+    text-align: center; /* 使按钮文字居中 */
+}
+
+.result {
+    margin-top: 20px;
+    font-size: 18px;
+    color: #333;
+    line-height: 1.6;
+}
+
+.high-risk {
+    color: red;
+    font-weight: bold;
+}
+
+.low-risk {
+    color: lightblue;
+    font-weight: bold;
+}
+
+    </style>
+</head>
+<body>
+    <h1>CCAR Calculator</h1>
+    <div class="calculator">
+        <label>Albumin (g/dL):</label>
+        <input type="number" id="albumin" step="0.01">
+        
+        <label>CRP (mg/dL):</label>
+        <input type="number" id="crp" step="0.01">
+        
+        <label>Creatinine (mg/dL):</label>
+        <input type="number" id="cr" step="0.01">
+        
+        <button onclick="calculateCCAR()">calculate</button>
+        
+        <div class="result" id="result">
+            <p>CCAR index: <strong id="ccar_value"></strong></p>
+            <p id="risk_level"></p>
+        </div>
+    </div>
+
+    <script>
+        function calculateCCAR() {
+            const albumin = parseFloat(document.getElementById("albumin").value);
+            const crp = parseFloat(document.getElementById("crp").value);
+            const cr = parseFloat(document.getElementById("cr").value);
+
+            // 发送数据到后端进行计算
+            fetch("/predict", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ Albumin: albumin, CRP: crp, Cr: cr })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById("result").innerText = "发生错误：" + data.error;
+                } else {
+                    document.getElementById("ccar_value").innerText = data.CCAR;
+
+                    // 判断CCAR值的高低
+                    let riskText = '';
+                    let riskClass = '';
+                    if (data.CCAR > 0.56) {
+                        riskText = 'high risk';
+                        riskClass = 'high-risk';
+                    } else {
+                        riskText = 'low risk';
+                        riskClass = 'low-risk';
+                    }
+                    document.getElementById("risk_level").innerText = riskText;
+                    document.getElementById("risk_level").className = riskClass;
+                }
+            })
+            .catch(err => {
+                document.getElementById("result").innerText = "发生错误：" + err;
+            });
+        }
+    </script>
+</body>
+</html>
+
+
