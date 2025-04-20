@@ -14,5 +14,12 @@
   ],
   "env": {
     "FLASK_ENV": "production"
+  },
+  "functions": {
+    "api/**.py": {
+      "runtime": "python3.9",  // 确保使用 Python 3.9 或合适的版本
+      "memory": 512,
+      "maxDuration": 10
+    }
   }
 }
